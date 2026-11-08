@@ -46,6 +46,18 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab{background:#151e
 .dev-overlay{display:none;position:fixed;inset:0;z-index:100;background:#05080ddd;backdrop-filter:blur(8px);padding:18px;align-items:center;justify-content:center}
 .dev-overlay.show{display:flex}.dev-box{width:min(100%,440px);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#1a2636,#101722);border:1px solid #60738e;border-radius:16px;padding:20px;box-shadow:0 20px 70px #000b}.dev-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.dev-head h2{margin:0;font-size:19px}.dev-tag{font-size:10px;color:#ff6576;letter-spacing:2px;font-weight:900}.dev-field{display:grid;gap:6px;margin:13px 0}.dev-field label{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px}.dev-field input,.dev-field select{width:100%;padding:12px;border-radius:8px;border:1px solid #40516a;background:#0b111a;color:white;font:inherit}.dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.dev-hint{font-size:10px;color:var(--muted);margin-top:14px;line-height:1.5}
 
+
+.inventory-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:0 0 14px}
+.sort-tools{display:flex;gap:7px;flex-wrap:wrap}
+.sort-tools select{background:#111a26;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px;font:inherit;font-size:12px}
+.contract-info{font-size:12px;color:var(--muted);line-height:1.5;margin:-5px 0 14px}
+.contract-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:9px;margin:14px 0}
+.contract-card{background:#111a26;border:1px solid var(--line);border-bottom:3px solid var(--rarity);border-radius:10px;padding:10px;text-align:center;cursor:pointer;min-width:0}
+.contract-card.selected{outline:2px solid var(--gold);background:#29251d}
+.contract-card .weapon{font-size:30px}.contract-card h4{font-size:11px;margin:5px 0}.contract-card small{color:var(--muted);font-size:10px}
+.contract-card input{accent-color:var(--gold);width:17px;height:17px}
+.contract-result{padding:13px;border:1px solid var(--line);border-radius:10px;background:#0e1621;text-align:center;margin-top:12px}
+
 </style>
 </head>
 <body>
@@ -54,6 +66,7 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab{background:#151e
 <nav>
 <button class="tab active" data-page="opening">🎁 Otwieranie</button>
 <button class="tab" data-page="inventory">🎒 Ekwipunek <span id="inv-count">0</span></button>
+<button class="tab" data-page="contracts">🔄 Kontrakty</button>
 <button class="tab" data-page="shop">🛒 Sklep</button>
 <button class="tab" data-page="earn">💰 Zarabianie</button>
 <button class="tab" data-page="stats">📊 Statystyki</button>
@@ -73,7 +86,20 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab{background:#151e
 <aside class="panel"><h3 class="section-title">📈 Szanse na drop</h3><div class="odds" id="odds"></div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3 class="section-title">💡 Jak grać?</h3><p style="font-size:12px;color:var(--muted)">1. Wybierz skrzynkę w sklepie lub z listy.<br><br>2. Otwórz ją za wirtualne monety.<br><br>3. Sprzedaj zdobyty skin albo zachowaj go w ekwipunku.<br><br>4. Zbieraj monety i poluj na rzadkie przedmioty!</p><div class="stat"><small>OTWARTE SKRZYNKI</small><b id="opened-count">0</b></div></aside>
 </div>
 </section>
-<section class="page" id="page-inventory"><div class="panel"><h2 class="section-title">🎒 Twój ekwipunek</h2><div class="stats"><div class="stat"><small>PRZEDMIOTY</small><b id="inv-total">0</b></div><div class="stat"><small>WARTOŚĆ EKWIPUNKU</small><b id="inv-value">0 🪙</b></div><div class="stat"><small>NAJDROŻSZY SKIN</small><b id="inv-best">—</b></div></div><div class="actions" style="justify-content:flex-end;margin-bottom:14px"><button class="btn secondary" id="sell-all">SPRZEDAJ WSZYSTKO</button></div><div class="inventory-grid" id="inventory-grid"></div></div></section>
+<section class="page" id="page-inventory"><div class="panel"><h2 class="section-title">🎒 Twój ekwipunek</h2><div class="stats"><div class="stat"><small>PRZEDMIOTY</small><b id="inv-total">0</b></div><div class="stat"><small>WARTOŚĆ EKWIPUNKU</small><b id="inv-value">0 🪙</b></div><div class="stat"><small>NAJDROŻSZY SKIN</small><b id="inv-best">—</b></div></div><div class="inventory-tools">
+<div class="sort-tools"><select id="inventory-sort" aria-label="Sortowanie ekwipunku">
+<option value="newest">Najnowsze</option><option value="price-desc">Cena: od najwyższej</option><option value="price-asc">Cena: od najniższej</option><option value="rarity-desc">Rzadkość: od najwyższej</option><option value="rarity-asc">Rzadkość: od najniższej</option>
+</select></div>
+<button class="btn secondary" id="sell-all">SPRZEDAJ WSZYSTKO</button>
+</div><div class="inventory-grid" id="inventory-grid"></div></div></section>
+<section class="page" id="page-contracts"><div class="panel">
+<h2 class="section-title">🔄 Kontrakty wymiany</h2>
+<p class="contract-info">Wybierz dokładnie 5 skinów tej samej rzadkości. Wymienisz je na jeden losowy skin z następnego poziomu. Przedmioty użyte w kontrakcie zostaną zużyte.</p>
+<div class="stats"><div class="stat"><small>WYBRANE SKINY</small><b id="contract-count">0 / 5</b></div><div class="stat"><small>RZADKOŚĆ WEJŚCIOWA</small><b id="contract-tier">—</b></div><div class="stat"><small>MOŻLIWA NAGRODA</small><b id="contract-next">—</b></div></div>
+<div class="actions" style="justify-content:space-between"><span id="contract-hint" style="font-size:11px;color:var(--muted)">Zaznacz pięć skinów tej samej rzadkości.</span><button class="btn" id="contract-submit" disabled>WYKONAJ KONTRAKT</button></div>
+<div class="contract-grid" id="contract-grid"></div>
+<div class="contract-result" id="contract-result"><b>🎲 Twój kolejny drop czeka!</b><p style="font-size:11px;color:var(--muted);margin:5px 0 0">Kontrakt nie kosztuje monet — płacisz wybranymi skinami.</p></div>
+</div></section>
 <section class="page" id="page-shop"><div class="panel"><h2 class="section-title">🛒 Sklep ze skrzynkami</h2><p style="color:var(--muted);font-size:12px">Wybierz skrzynkę. Każda ma inną pulę skinów i cenę.</p><div class="shop-grid" id="shop-grid"></div></div></section>
 <section class="page" id="page-earn"><div class="panel"><h2 class="section-title">💰 Centrum zarabiania</h2><p style="color:var(--muted);font-size:12px;margin-top:-6px">Zdobywaj darmowe monety, wykonując zadania. Postęp zapisuje się na tym urządzeniu.</p><div class="stat" style="margin-bottom:14px"><small>CODZIENNY BONUS • CO 24 GODZINY</small><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:7px"><div><b style="color:var(--gold);font-size:23px">+1 200 🪙</b><div id="daily-status" style="font-size:11px;color:var(--muted)">Gotowy do odbioru!</div></div><button class="btn" id="daily-claim">ODBIERZ</button></div></div><h3 class="section-title" style="margin-top:20px">🎯 Misje dzienne</h3><div id="missions" style="display:grid;gap:10px"></div><p class="notice">Misje odnawiają się codziennie. Bonus można odebrać raz na 24 godziny.</p></div></section>
 <section class="page" id="page-stats"><div class="panel"><h2 class="section-title">📊 Twoje statystyki</h2><div class="stats"><div class="stat"><small>OTWARTE SKRZYNKI</small><b id="s-opened">0</b></div><div class="stat"><small>WYDANE MONETY</small><b id="s-spent">0</b></div><div class="stat"><small>ZAROBIONE ZE SPRZEDAŻY</small><b id="s-earned">0</b></div><div class="stat"><small>LEGENDARNE DROPY</small><b id="s-legend">0</b></div><div class="stat"><small>NAJLEPSZY DROP</small><b id="s-best">—</b></div><div class="stat"><small>AKTUALNE SALDO</small><b id="s-balance">5 000</b></div></div><button class="btn danger" id="reset">RESETUJ GRĘ</button><p class="notice">Reset usuwa lokalny zapis gry i przywraca początkowe saldo.</p></div></section>
@@ -111,18 +137,59 @@ const pools=[
 { id:'knife',name:'Knife Case',icon:'🔪',price:3500,desc:'Polowanie na wyjątkowe noże.',skins:[
 ['🔫','Five-SeveN | Urban',900,'common'],['🔪','Nóż składany | Scorch',1800,'uncommon'],['🔪','Huntsman | Night',4500,'rare'],['🗡️','Falchion | Marble Fade',11000,'epic'],['🔪','Butterfly | Fade',35000,'legendary'],['💎','Karambit | Sapphire',100000,'ancient']]},
 { id:'glove',name:'Glove Case',icon:'🧤',price:6000,desc:'Rękawice i ekskluzywne dropy.',skins:[
-['🧤','Rękawice | Field',1500,'common'],['🧤','Rękawice | Camo',2800,'uncommon'],['🧤','Rękawice | Crimson',6500,'rare'],['🧤','Sport Gloves | Vice',18000,'epic'],['🧤','Specialist | Fade',52000,'legendary'],['👑','Sport Gloves | Pandora',150000,'ancient']]}
+['🧤','Rękawice | Field',1500,'common'],['🧤','Rękawice | Camo',2800,'uncommon'],['🧤','Rękawice | Crimson',6500,'rare'],['🧤','Sport Gloves | Vice',18000,'epic'],['🧤','Specialist | Fade',52000,'legendary'],['👑','Sport Gloves | Pandora',150000,'ancient'],
+['🧤','Driver Gloves | Convoy',1750,'common'],['🧤','Hand Wraps | Duct Tape',3200,'uncommon'],['🧤','Moto Gloves | Smoke Out',7200,'rare']]},
+{ id:'pistol',name:'Pistol Case',icon:'🔫',price:850,desc:'Pistolety, szybkie dropy i kilka perełek.',skins:[
+['🔫','USP-S | Check Engine',260,'common'],['🔫','Glock-18 | High Beam',330,'common'],['🔫','P2000 | Ivory',520,'uncommon'],['🔫','Tec-9 | Avalanche',950,'rare'],['🔫','Desert Eagle | Mecha',2600,'epic'],['💠','USP-S | Kill Confirmed',8500,'legendary'],['👑','Desert Eagle | Emerald Jörmungandr',32000,'ancient'],['🔫','Five-SeveN | Scrawl',410,'common']]},
+{ id:'neon',name:'Neon Case',icon:'🌈',price:2400,desc:'Kolorowe skiny z neonowym klimatem.',skins:[
+['🎨','MP9 | Neon Grid',650,'common'],['🌈','MAC-10 | Disco',900,'uncommon'],['⚡','AK-47 | Neon Revolution',2100,'rare'],['🐉','M4A1-S | Hyper Beast',6200,'epic'],['💜','AWP | Chromatic Aberration',14500,'legendary'],['💎','M4A4 | Howl',65000,'ancient'],['🎨','UMP-45 | Wild Child',720,'common']]},
+{ id:'awp',name:'AWP Case',icon:'🎯',price:4200,desc:'Skrzynka dla fanów snajperek.',skins:[
+['🎯','SSG 08 | Mainframe',1100,'common'],['🎯','AWP | Pit Viper',1800,'uncommon'],['🎯','AWP | Worm God',3900,'rare'],['🐍','AWP | Redline',9200,'epic'],['🔥','AWP | Asiimov',28000,'legendary'],['👑','AWP | Dragon Lore',180000,'ancient'],['🎯','G3SG1 | Hunter',1250,'common']]}
 ];
-const defaults=()=>({balance:5000,opened:0,spent:0,earned:0,legendary:0,inventory:[],best:null,serial:0,lastDailyClaim:0,daily:{day:[new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,'0'),String(new Date().getDate()).padStart(2,'0')].join('-'),opened:0,sold:0,rare:0,claimed:[]}});
+const defaults=()=>({balance:5000,opened:0,spent:0,earned:0,legendary:0,inventory:[],best:null,serial:0,lastDailyClaim:0,daily:{day:[new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,'0'),String(new Date().getDate()).padStart(2,'0')].join('-'),opened:0,sold:0,rare:0,epic:0,legendary:0,claimed:[]}});
 let state;try{state={...defaults(),...JSON.parse(localStorage.getItem('caselab-save')||'{}')}}catch{state=defaults()}
-let selected=0,busy=false;
+let selected=0,busy=false,inventorySort='newest',contractSelection=[];
 state.daily=state.daily||defaults().daily;state.lastDailyClaim=state.lastDailyClaim||0;
-function refreshDaily(){const today=[new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,'0'),String(new Date().getDate()).padStart(2,'0')].join('-');if(state.daily.day!==today)state.daily={day:today,opened:0,sold:0,rare:0,claimed:[]};}
+function refreshDaily(){const today=[new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,'0'),String(new Date().getDate()).padStart(2,'0')].join('-');if(state.daily.day!==today)state.daily={day:today,opened:0,sold:0,rare:0,epic:0,legendary:0,claimed:[]};state.daily.opened=state.daily.opened||0;state.daily.sold=state.daily.sold||0;state.daily.rare=state.daily.rare||0;state.daily.epic=state.daily.epic||0;state.daily.legendary=state.daily.legendary||0;state.daily.claimed=state.daily.claimed||[];}
 refreshDaily();
-const missions=[{id:'open',title:'Otwórz 2 skrzynki',desc:'Każde otwarcie przybliża Cię do nagrody.',goal:2,reward:500,field:'opened'},{id:'sell',title:'Sprzedaj 2 skiny',desc:'Zamień przedmioty na wirtualne monety.',goal:2,reward:400,field:'sold'},{id:'rare',title:'Zdobądź skin rzadki lub lepszy',desc:'Mil-Spec, Restricted, Classified lub Covert.',goal:1,reward:800,field:'rare'}];
+const missions=[
+{id:'open3',title:'Rozgrzewka: otwórz 3 skrzynki',desc:'Zrób kilka otwarć dowolnych skrzynek.',goal:3,reward:650,field:'opened'},
+{id:'sell3',title:'Porządki w ekwipunku: sprzedaj 3 skiny',desc:'Sprzedaj trzy przedmioty i zgarnij monety.',goal:3,reward:550,field:'sold'},
+{id:'rare2',title:'Łowca rzadkości: zdobądź 2 rzadkie skiny',desc:'Mil-Spec lub coś jeszcze lepszego.',goal:2,reward:900,field:'rare'},
+{id:'epic1',title:'Fioletowy błysk: zdobądź skin Epic',desc:'Restricted, Classified albo Covert.',goal:1,reward:1100,field:'epic'},
+{id:'legendary1',title:'Wielki drop: zdobądź Legendary',desc:'Classified lub Covert — powodzenia!',goal:1,reward:1800,field:'legendary'},
+{id:'open6',title:'Maraton: otwórz 6 skrzynek',desc:'Dla najbardziej wytrwałych łowców.',goal:6,reward:1400,field:'opened'}
+];
 const save=()=>{try{localStorage.setItem('caselab-save',JSON.stringify(state))}catch{}};
 const toast=m=>{let t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.display='none',2300)};
 function tier(k){return rarities.find(r=>r.key===k)}
+const rarityOrder=rarities.map(r=>r.key);
+function sortedInventory(){
+ const arr=state.inventory.map((v,i)=>({v,i}));
+ if(inventorySort==='price-desc')arr.sort((a,b)=>b.v.value-a.v.value);
+ else if(inventorySort==='price-asc')arr.sort((a,b)=>a.v.value-b.v.value);
+ else if(inventorySort==='rarity-desc')arr.sort((a,b)=>rarityOrder.indexOf(b.v.rarity)-rarityOrder.indexOf(a.v.rarity)||b.v.value-a.v.value);
+ else if(inventorySort==='rarity-asc')arr.sort((a,b)=>rarityOrder.indexOf(a.v.rarity)-rarityOrder.indexOf(b.v.rarity)||a.v.value-b.v.value);
+ else arr.sort((a,b)=>(b.v.serial||0)-(a.v.serial||0));
+ return arr;
+}
+function contractValidation(){
+ const chosen=contractSelection.map(id=>state.inventory.find(v=>v.serial===id)).filter(Boolean);
+ const same=chosen.length===5&&chosen.every(v=>v.rarity===chosen[0].rarity);
+ const tierIndex=same?rarityOrder.indexOf(chosen[0].rarity):-1;
+ const possible=tierIndex>=0&&tierIndex<rarityOrder.length-1;
+ return {chosen,same,possible,next:possible?rarityOrder[tierIndex+1]:null};
+}
+function renderContracts(){
+ contractSelection=contractSelection.filter(id=>state.inventory.some(v=>v.serial===id));
+ const check=contractValidation();
+ $('contract-count').textContent=contractSelection.length+' / 5';
+ $('contract-tier').textContent=check.same?tier(check.chosen[0].rarity).name:'—';
+ $('contract-next').textContent=check.possible?tier(check.next).name:'—';
+ $('contract-submit').disabled=!check.same||!check.possible;
+ $('contract-hint').textContent=contractSelection.length>5?'Możesz wybrać maksymalnie 5 skinów.':check.same?(check.possible?'Gotowe! Możesz wykonać kontrakt.':'To najwyższa rzadkość — nie można jej ulepszyć.'):'Wybierz 5 skinów tej samej rzadkości.';
+ $('contract-grid').innerHTML=state.inventory.length?state.inventory.map(v=>`<label class="contract-card r-${v.rarity} ${contractSelection.includes(v.serial)?'selected':''}"><input type="checkbox" data-contract="${v.serial}" ${contractSelection.includes(v.serial)?'checked':''}><div class="weapon">${v.icon}</div><div class="rarity-label">${tier(v.rarity).name}</div><h4>${v.name}</h4><small>${fmt(v.value)} 🪙</small></label>`).join(''):'<div class="empty">Nie masz skinów do wymiany. Otwórz skrzynkę, żeby zdobyć pierwsze!</div>';
+}
 function itemCard(v,idx){return `<div class="item r-${v.rarity}"><div class="weapon">${v.icon}</div><div class="rarity-label">${tier(v.rarity).name}</div><h4>${v.name}</h4><div class="wear">${v.wear}</div><div class="value">${fmt(v.value)} 🪙</div><button data-sell="${idx}">SPRZEDAJ</button></div>`}
 function render(){
 $('balance').textContent=fmt(state.balance)+' 🪙';$('inv-count').textContent=state.inventory.length;
@@ -134,6 +201,7 @@ $('odds').innerHTML=rarities.map(r=>`<div class="odd"><i class="dot" style="--c:
 $('inventory-grid').innerHTML=state.inventory.length?state.inventory.map(itemCard).join(''):'<div class="empty">Ekwipunek jest pusty. Czas otworzyć pierwszą skrzynkę! 🎁</div>';
 $('inv-total').textContent=state.inventory.length;$('inv-value').textContent=fmt(state.inventory.reduce((a,v)=>a+v.value,0))+' 🪙';
 $('inv-best').textContent=state.inventory.length?fmt(Math.max(...state.inventory.map(v=>v.value)))+' 🪙':'—';
+ renderContracts();
 $('shop-grid').innerHTML=pools.map((p,i)=>`<div class="item"><div class="weapon">${p.icon}</div><h4>${p.name}</h4><div class="wear">${p.desc}</div><div class="value">${fmt(p.price)} 🪙</div><button data-buy="${i}">WYBIERZ SKRZYNKĘ</button></div>`).join('');
 $('s-opened').textContent=state.opened;$('s-spent').textContent=fmt(state.spent)+' 🪙';$('s-earned').textContent=fmt(state.earned)+' 🪙';$('s-legend').textContent=state.legendary;$('s-best').textContent=state.best?state.best.name:'—';$('s-balance').textContent=fmt(state.balance)+' 🪙';
 refreshDaily();const wait=Math.max(0,86400000-(Date.now()-(state.lastDailyClaim||0)));$('daily-claim').disabled=wait>0;$('daily-status').textContent=wait>0?'Następny bonus za '+Math.ceil(wait/3600000)+' godz.':'Gotowy do odbioru!';
@@ -156,7 +224,7 @@ $('roulette').innerHTML=arr.map(x=>`<div class="roll-item r-${x.rarity}" style="
 }
 function openCase(quick){
 if(busy)return;let c=pools[selected];if(state.balance<c.price){toast('Za mało monet! Sprzedaj skiny lub wybierz tańszą skrzynkę.');return}
-busy=true;state.balance-=c.price;state.spent+=c.price;state.opened++;refreshDaily();state.daily.opened++;let winner=pick(c);if(['rare','epic','legendary','ancient'].includes(winner.rarity))state.daily.rare++;render();
+busy=true;state.balance-=c.price;state.spent+=c.price;state.opened++;refreshDaily();state.daily.opened++;let winner=pick(c);if(['rare','epic','legendary','ancient'].includes(winner.rarity))state.daily.rare++;if(['epic','legendary','ancient'].includes(winner.rarity))state.daily.epic++;if(['legendary','ancient'].includes(winner.rarity))state.daily.legendary++;render();
 let art=$('case-art');art.classList.add('opening');$('result').innerHTML='<div class="big">✨</div><h3>Losowanie...</h3><p>Co tym razem wypadnie?</p>';
 if(quick){finish(winner);return}
 makeStrip(winner);let roulette=$('roulette');roulette.style.transition='none';roulette.scrollLeft=0;
@@ -176,6 +244,31 @@ $('case-picker').onclick=e=>{let b=e.target.closest('[data-case]');if(b&&!busy){
 $('shop-grid').onclick=e=>{let b=e.target.closest('[data-buy]');if(b&&!busy){selected=+b.dataset.buy;document.querySelector('[data-page="opening"]').click();render()}};
 $('open-btn').onclick=()=>openCase(false);$('quick-btn').onclick=()=>openCase(true);
 $('inventory-grid').onclick=e=>{let b=e.target.closest('[data-sell]');if(b)sell(+b.dataset.sell)};
+$('inventory-sort').onchange=e=>{inventorySort=e.target.value;render()};
+$('contract-grid').onchange=e=>{
+ const input=e.target.closest('input[data-contract]');if(!input)return;
+ const id=Number(input.dataset.contract);
+ if(input.checked){if(contractSelection.length>=5){input.checked=false;toast('Możesz wybrać maksymalnie 5 skinów.');return}if(!contractSelection.includes(id))contractSelection.push(id);}
+ else contractSelection=contractSelection.filter(x=>x!==id);
+ renderContracts();
+};
+$('contract-submit').onclick=()=>{
+ const check=contractValidation();if(!check.same||!check.possible)return;
+ const target=check.next;
+ const candidates=pools.flatMap(p=>p.skins).filter(s=>s[3]===target);
+ if(!candidates.length)return toast('Brak skinów dla tej rzadkości.');
+ const consumed=new Set(check.chosen.map(v=>v.serial));
+ state.inventory=state.inventory.filter(v=>!consumed.has(v.serial));
+ const skin=candidates[Math.floor(Math.random()*candidates.length)];
+ const wear=['Factory New','Minimal Wear','Field-Tested','Well-Worn','Battle-Scarred'][Math.floor(Math.random()*5)];
+ const factor={'Factory New':1.35,'Minimal Wear':1.15,'Field-Tested':1,'Well-Worn':.85,'Battle-Scarred':.7}[wear];
+ const reward={icon:skin[0],name:skin[1],value:Math.round(skin[2]*factor),rarity:target,wear,serial:++state.serial};
+ state.inventory.unshift(reward);if(!state.best||reward.value>state.best.value)state.best=reward;
+ contractSelection=[];
+ $('contract-result').innerHTML=`<div class="big">${reward.icon}</div><div class="rarity-label" style="--rarity:${tier(reward.rarity).color}">${tier(reward.rarity).name}</div><b>${reward.name}</b><p style="font-size:11px;color:var(--muted);margin:5px 0 0">${reward.wear} • ${fmt(reward.value)} 🪙</p>`;
+ render();toast('Kontrakt udany! Zdobyto '+reward.name);
+};
+
 $('sell-all').onclick=()=>{if(!state.inventory.length)return toast('Nie masz żadnych skinów.');let sum=state.inventory.reduce((a,v)=>a+v.value,0);refreshDaily();state.daily.sold+=state.inventory.length;state.inventory=[];state.balance+=sum;state.earned+=sum;render();toast('Sprzedano wszystko za '+fmt(sum)+' monet!')};
 $('daily-claim').onclick=()=>{const wait=86400000-(Date.now()-(state.lastDailyClaim||0));if(wait>0)return toast('Bonus będzie dostępny później.');state.balance+=1200;state.earned+=1200;state.lastDailyClaim=Date.now();render();toast('Odebrano dzienny bonus: +1 200 monet!')};
 $('missions').onclick=e=>{const b=e.target.closest('[data-mission]');if(!b)return;const m=missions.find(x=>x.id===b.dataset.mission);if(!m||state.daily.claimed.includes(m.id)||(state.daily[m.field]||0)<m.goal)return;state.daily.claimed.push(m.id);state.balance+=m.reward;state.earned+=m.reward;render();toast('Misja ukończona! +'+fmt(m.reward)+' monet.')};
