@@ -41,6 +41,11 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab{background:#151e
 .empty{color:var(--muted);text-align:center;padding:30px 10px;grid-column:1/-1}
 @media(max-width:760px){.layout{grid-template-columns:1fr}.case-picker{grid-template-columns:repeat(3,1fr)}.stats{grid-template-columns:1fr 1fr}.app{padding:14px 12px 35px}}
 @media(max-width:390px){.case-picker{grid-template-columns:1fr}.logo{font-size:19px}}
+
+/* PANEL DEV */
+.dev-overlay{display:none;position:fixed;inset:0;z-index:100;background:#05080ddd;backdrop-filter:blur(8px);padding:18px;align-items:center;justify-content:center}
+.dev-overlay.show{display:flex}.dev-box{width:min(100%,440px);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#1a2636,#101722);border:1px solid #60738e;border-radius:16px;padding:20px;box-shadow:0 20px 70px #000b}.dev-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.dev-head h2{margin:0;font-size:19px}.dev-tag{font-size:10px;color:#ff6576;letter-spacing:2px;font-weight:900}.dev-field{display:grid;gap:6px;margin:13px 0}.dev-field label{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:1px}.dev-field input,.dev-field select{width:100%;padding:12px;border-radius:8px;border:1px solid #40516a;background:#0b111a;color:white;font:inherit}.dev-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.dev-hint{font-size:10px;color:var(--muted);margin-top:14px;line-height:1.5}
+
 </style>
 </head>
 <body>
@@ -50,6 +55,7 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab{background:#151e
 <button class="tab active" data-page="opening">🎁 Otwieranie</button>
 <button class="tab" data-page="inventory">🎒 Ekwipunek <span id="inv-count">0</span></button>
 <button class="tab" data-page="shop">🛒 Sklep</button>
+<button class="tab" data-page="earn">💰 Zarabianie</button>
 <button class="tab" data-page="stats">📊 Statystyki</button>
 </nav>
 <section class="page active" id="page-opening">
@@ -69,9 +75,23 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab{background:#151e
 </section>
 <section class="page" id="page-inventory"><div class="panel"><h2 class="section-title">🎒 Twój ekwipunek</h2><div class="stats"><div class="stat"><small>PRZEDMIOTY</small><b id="inv-total">0</b></div><div class="stat"><small>WARTOŚĆ EKWIPUNKU</small><b id="inv-value">0 🪙</b></div><div class="stat"><small>NAJDROŻSZY SKIN</small><b id="inv-best">—</b></div></div><div class="actions" style="justify-content:flex-end;margin-bottom:14px"><button class="btn secondary" id="sell-all">SPRZEDAJ WSZYSTKO</button></div><div class="inventory-grid" id="inventory-grid"></div></div></section>
 <section class="page" id="page-shop"><div class="panel"><h2 class="section-title">🛒 Sklep ze skrzynkami</h2><p style="color:var(--muted);font-size:12px">Wybierz skrzynkę. Każda ma inną pulę skinów i cenę.</p><div class="shop-grid" id="shop-grid"></div></div></section>
+<section class="page" id="page-earn"><div class="panel"><h2 class="section-title">💰 Centrum zarabiania</h2><p style="color:var(--muted);font-size:12px;margin-top:-6px">Zdobywaj darmowe monety, wykonując zadania. Postęp zapisuje się na tym urządzeniu.</p><div class="stat" style="margin-bottom:14px"><small>CODZIENNY BONUS • CO 24 GODZINY</small><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:7px"><div><b style="color:var(--gold);font-size:23px">+1 200 🪙</b><div id="daily-status" style="font-size:11px;color:var(--muted)">Gotowy do odbioru!</div></div><button class="btn" id="daily-claim">ODBIERZ</button></div></div><h3 class="section-title" style="margin-top:20px">🎯 Misje dzienne</h3><div id="missions" style="display:grid;gap:10px"></div><p class="notice">Misje odnawiają się codziennie. Bonus można odebrać raz na 24 godziny.</p></div></section>
 <section class="page" id="page-stats"><div class="panel"><h2 class="section-title">📊 Twoje statystyki</h2><div class="stats"><div class="stat"><small>OTWARTE SKRZYNKI</small><b id="s-opened">0</b></div><div class="stat"><small>WYDANE MONETY</small><b id="s-spent">0</b></div><div class="stat"><small>ZAROBIONE ZE SPRZEDAŻY</small><b id="s-earned">0</b></div><div class="stat"><small>LEGENDARNE DROPY</small><b id="s-legend">0</b></div><div class="stat"><small>NAJLEPSZY DROP</small><b id="s-best">—</b></div><div class="stat"><small>AKTUALNE SALDO</small><b id="s-balance">5 000</b></div></div><button class="btn danger" id="reset">RESETUJ GRĘ</button><p class="notice">Reset usuwa lokalny zapis gry i przywraca początkowe saldo.</p></div></section>
 <div class="notice">CASE LAB • Gra fanowska inspirowana mechaniką otwierania skrzynek. Wszystkie monety są wirtualne — brak płatności i prawdziwych nagród.</div>
-</div><div class="toast" id="toast"></div>
+</div>
+<div class="dev-overlay" id="dev-overlay" role="dialog" aria-modal="true" aria-label="Panel deweloperski">
+ <div class="dev-box">
+  <div class="dev-head"><div><div class="dev-tag">TRYB DEWELOPERA</div><h2>🛠️ PANEL DEV</h2></div><button class="btn secondary" id="dev-close" style="padding:8px 12px">✕</button></div>
+  <div class="dev-field"><label for="dev-coins">DODAJ MONETY</label><input id="dev-coins" type="number" min="1" step="1" value="100000" inputmode="numeric"></div>
+  <button class="btn" id="dev-add-coins" style="width:100%">DODAJ MONETY</button>
+  <div class="dev-field"><label for="dev-balance">USTAW DOKŁADNE SALDO</label><input id="dev-balance" type="number" min="0" step="1" value="1000000" inputmode="numeric"></div>
+  <button class="btn secondary" id="dev-set-balance" style="width:100%">USTAW SALDO</button>
+  <div class="dev-field"><label for="dev-skin">DODAJ SKIN DO EKWIPUNKU</label><select id="dev-skin"></select></div>
+  <button class="btn secondary" id="dev-add-skin" style="width:100%">DODAJ WYBRANY SKIN</button>
+  <p class="dev-hint">Panel jest lokalnym narzędziem developerskim. Zmiany zapisują się w pamięci tej przeglądarki. Nie jest to system zabezpieczeń — każdy, kto ma dostęp do kodu strony, może zmienić zapis gry.</p>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
 <script>
 (()=>{
 const $=id=>document.getElementById(id),fmt=n=>Math.floor(n).toLocaleString('pl-PL');
@@ -93,9 +113,13 @@ const pools=[
 { id:'glove',name:'Glove Case',icon:'🧤',price:6000,desc:'Rękawice i ekskluzywne dropy.',skins:[
 ['🧤','Rękawice | Field',1500,'common'],['🧤','Rękawice | Camo',2800,'uncommon'],['🧤','Rękawice | Crimson',6500,'rare'],['🧤','Sport Gloves | Vice',18000,'epic'],['🧤','Specialist | Fade',52000,'legendary'],['👑','Sport Gloves | Pandora',150000,'ancient']]}
 ];
-const defaults=()=>({balance:5000,opened:0,spent:0,earned:0,legendary:0,inventory:[],best:null,serial:0});
+const defaults=()=>({balance:5000,opened:0,spent:0,earned:0,legendary:0,inventory:[],best:null,serial:0,lastDailyClaim:0,daily:{day:[new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,'0'),String(new Date().getDate()).padStart(2,'0')].join('-'),opened:0,sold:0,rare:0,claimed:[]}});
 let state;try{state={...defaults(),...JSON.parse(localStorage.getItem('caselab-save')||'{}')}}catch{state=defaults()}
 let selected=0,busy=false;
+state.daily=state.daily||defaults().daily;state.lastDailyClaim=state.lastDailyClaim||0;
+function refreshDaily(){const today=[new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,'0'),String(new Date().getDate()).padStart(2,'0')].join('-');if(state.daily.day!==today)state.daily={day:today,opened:0,sold:0,rare:0,claimed:[]};}
+refreshDaily();
+const missions=[{id:'open',title:'Otwórz 2 skrzynki',desc:'Każde otwarcie przybliża Cię do nagrody.',goal:2,reward:500,field:'opened'},{id:'sell',title:'Sprzedaj 2 skiny',desc:'Zamień przedmioty na wirtualne monety.',goal:2,reward:400,field:'sold'},{id:'rare',title:'Zdobądź skin rzadki lub lepszy',desc:'Mil-Spec, Restricted, Classified lub Covert.',goal:1,reward:800,field:'rare'}];
 const save=()=>{try{localStorage.setItem('caselab-save',JSON.stringify(state))}catch{}};
 const toast=m=>{let t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.style.display='none',2300)};
 function tier(k){return rarities.find(r=>r.key===k)}
@@ -112,6 +136,8 @@ $('inv-total').textContent=state.inventory.length;$('inv-value').textContent=fmt
 $('inv-best').textContent=state.inventory.length?fmt(Math.max(...state.inventory.map(v=>v.value)))+' 🪙':'—';
 $('shop-grid').innerHTML=pools.map((p,i)=>`<div class="item"><div class="weapon">${p.icon}</div><h4>${p.name}</h4><div class="wear">${p.desc}</div><div class="value">${fmt(p.price)} 🪙</div><button data-buy="${i}">WYBIERZ SKRZYNKĘ</button></div>`).join('');
 $('s-opened').textContent=state.opened;$('s-spent').textContent=fmt(state.spent)+' 🪙';$('s-earned').textContent=fmt(state.earned)+' 🪙';$('s-legend').textContent=state.legendary;$('s-best').textContent=state.best?state.best.name:'—';$('s-balance').textContent=fmt(state.balance)+' 🪙';
+refreshDaily();const wait=Math.max(0,86400000-(Date.now()-(state.lastDailyClaim||0)));$('daily-claim').disabled=wait>0;$('daily-status').textContent=wait>0?'Następny bonus za '+Math.ceil(wait/3600000)+' godz.':'Gotowy do odbioru!';
+$('missions').innerHTML=missions.map(m=>{const progress=Math.min(state.daily[m.field]||0,m.goal),done=progress>=m.goal,claimed=state.daily.claimed.includes(m.id);return `<div class="stat"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b style="font-size:13px">${m.title}</b><div style="font-size:11px;color:var(--muted);margin-top:3px">${m.desc}</div></div><b style="color:var(--gold);white-space:nowrap">+${fmt(m.reward)} 🪙</b></div><div style="height:7px;background:#263346;border-radius:8px;margin:10px 0 7px;overflow:hidden"><div style="height:100%;width:${progress/m.goal*100}%;background:var(--green);border-radius:8px"></div></div><div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted)"><span>${progress}/${m.goal}</span><button class="${done&&!claimed?'btn':'btn secondary'}" style="padding:7px 10px;font-size:10px" data-mission="${m.id}" ${!done||claimed?'disabled':''}>${claimed?'ODEBRANO':done?'ODBIERZ NAGRODĘ':'W TRAKCIE'}</button></div></div>`}).join('');
 save();
 }
 function pick(c){
@@ -130,7 +156,7 @@ $('roulette').innerHTML=arr.map(x=>`<div class="roll-item r-${x.rarity}" style="
 }
 function openCase(quick){
 if(busy)return;let c=pools[selected];if(state.balance<c.price){toast('Za mało monet! Sprzedaj skiny lub wybierz tańszą skrzynkę.');return}
-busy=true;state.balance-=c.price;state.spent+=c.price;state.opened++;let winner=pick(c);render();
+busy=true;state.balance-=c.price;state.spent+=c.price;state.opened++;refreshDaily();state.daily.opened++;let winner=pick(c);if(['rare','epic','legendary','ancient'].includes(winner.rarity))state.daily.rare++;render();
 let art=$('case-art');art.classList.add('opening');$('result').innerHTML='<div class="big">✨</div><h3>Losowanie...</h3><p>Co tym razem wypadnie?</p>';
 if(quick){finish(winner);return}
 makeStrip(winner);let roulette=$('roulette');roulette.style.transition='none';roulette.scrollLeft=0;
@@ -144,14 +170,30 @@ if(v.rarity==='legendary'||v.rarity==='ancient')state.legendary++;
 $('result').innerHTML=`<div class="big">${v.icon}</div><div class="rarity-label r-${v.rarity}" style="--rarity:${tier(v.rarity).color}">${tier(v.rarity).name}</div><h3>${v.name}</h3><p>${v.wear} • Wartość: <b style="color:var(--gold)">${fmt(v.value)} 🪙</b></p>`;
 render();toast('Drop zdobyty: '+v.name+'!');
 }
-function sell(i){let v=state.inventory.splice(i,1)[0];if(!v)return;state.balance+=v.value;state.earned+=v.value;render();toast('Sprzedano '+v.name+' za '+fmt(v.value)+' monet.')}
+function sell(i){let v=state.inventory.splice(i,1)[0];if(!v)return;state.balance+=v.value;state.earned+=v.value;refreshDaily();state.daily.sold++;render();toast('Sprzedano '+v.name+' za '+fmt(v.value)+' monet.')}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id==='page-'+b.dataset.page));render()});
 $('case-picker').onclick=e=>{let b=e.target.closest('[data-case]');if(b&&!busy){selected=+b.dataset.case;render()}};
 $('shop-grid').onclick=e=>{let b=e.target.closest('[data-buy]');if(b&&!busy){selected=+b.dataset.buy;document.querySelector('[data-page="opening"]').click();render()}};
 $('open-btn').onclick=()=>openCase(false);$('quick-btn').onclick=()=>openCase(true);
 $('inventory-grid').onclick=e=>{let b=e.target.closest('[data-sell]');if(b)sell(+b.dataset.sell)};
-$('sell-all').onclick=()=>{if(!state.inventory.length)return toast('Nie masz żadnych skinów.');let sum=state.inventory.reduce((a,v)=>a+v.value,0);state.inventory=[];state.balance+=sum;state.earned+=sum;render();toast('Sprzedano wszystko za '+fmt(sum)+' monet!')};
+$('sell-all').onclick=()=>{if(!state.inventory.length)return toast('Nie masz żadnych skinów.');let sum=state.inventory.reduce((a,v)=>a+v.value,0);refreshDaily();state.daily.sold+=state.inventory.length;state.inventory=[];state.balance+=sum;state.earned+=sum;render();toast('Sprzedano wszystko za '+fmt(sum)+' monet!')};
+$('daily-claim').onclick=()=>{const wait=86400000-(Date.now()-(state.lastDailyClaim||0));if(wait>0)return toast('Bonus będzie dostępny później.');state.balance+=1200;state.earned+=1200;state.lastDailyClaim=Date.now();render();toast('Odebrano dzienny bonus: +1 200 monet!')};
+$('missions').onclick=e=>{const b=e.target.closest('[data-mission]');if(!b)return;const m=missions.find(x=>x.id===b.dataset.mission);if(!m||state.daily.claimed.includes(m.id)||(state.daily[m.field]||0)<m.goal)return;state.daily.claimed.push(m.id);state.balance+=m.reward;state.earned+=m.reward;render();toast('Misja ukończona! +'+fmt(m.reward)+' monet.')};
 $('reset').onclick=()=>{if(confirm('Na pewno zresetować całą grę?')){state=defaults();selected=0;$('result').innerHTML='<div class="big">🔒</div><h3>Gotowy na otwarcie?</h3><p>Wybierz skrzynkę i sprawdź, co wypadnie.</p>';$('roulette').innerHTML='<div class="roll-item"><span>🎯</span>Powodzenia!<small>Twój drop czeka</small></div>';render();toast('Gra została zresetowana.')}};
+// Ukryty panel DEV: pięć szybkich kliknięć w logo otwiera prośbę o kod.
+let logoTaps=[];
+const logoEl=document.querySelector('.logo');
+if(logoEl){logoEl.style.cursor='pointer';logoEl.addEventListener('click',()=>{const now=Date.now();logoTaps=logoTaps.filter(t=>now-t<2200);logoTaps.push(now);if(logoTaps.length>=5){logoTaps=[];const code=prompt('Kod dostępu do panelu DEV:');if(code==='MACIEKDEV')openDevPanel();else if(code!==null)toast('Nieprawidłowy kod.');}});}
+function openDevPanel(){
+ const overlay=$('dev-overlay');if(!overlay)return;
+ $('dev-skin').innerHTML=pools.flatMap(p=>p.skins.map((s,i)=>`<option value="${p.id}:${i}">${p.name} — ${s[1]} (${fmt(s[2])} 🪙)</option>`)).join('');
+ $('dev-overlay').classList.add('show');
+}
+$('dev-close').onclick=()=>$('dev-overlay').classList.remove('show');
+$('dev-overlay').addEventListener('click',e=>{if(e.target===$('dev-overlay'))$('dev-overlay').classList.remove('show')});
+$('dev-add-coins').onclick=()=>{const n=Math.floor(Number($('dev-coins').value));if(!Number.isFinite(n)||n<1||n>1000000000)return toast('Wpisz kwotę od 1 do 1 000 000 000.');state.balance+=n;save();render();toast('DEV: dodano '+fmt(n)+' monet!')};
+$('dev-set-balance').onclick=()=>{const n=Math.floor(Number($('dev-balance').value));if(!Number.isFinite(n)||n<0||n>1000000000)return toast('Wpisz saldo od 0 do 1 000 000 000.');state.balance=n;save();render();toast('DEV: ustawiono saldo na '+fmt(n)+' monet!')};
+$('dev-add-skin').onclick=()=>{const [poolId,index]= $('dev-skin').value.split(':');const pool=pools.find(p=>p.id===poolId);const skin=pool?.skins[Number(index)];if(!skin)return toast('Nie udało się znaleźć skina.');const rarity=skin[3];const v={icon:skin[0],name:skin[1],value:skin[2],rarity,wear:'Factory New',serial:++state.serial};state.inventory.unshift(v);if(!state.best||v.value>state.best.value)state.best=v;save();render();toast('DEV: dodano '+v.name+' do ekwipunku!')};
 render();
 })();
 
